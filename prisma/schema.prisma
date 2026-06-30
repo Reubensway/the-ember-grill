@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  image       String
+  category    String
+  available   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  orderItems  OrderItem[]
+  inventory   Inventory?
+}
+
+model Order {
+  id                  String      @id @default(cuid())
+  orderNumber         String      @unique
+  customerName        String
+  customerEmail       String?
+  customerPhone       String?
+  orderType           String      // dine-in, pickup, delivery
+  tableNumber         Int?
+  deliveryAddress     String?
+  status              String      @default("received")
+  totalAmount         Float
+  discountCode        String?
+  discountAmount      Float       @default(0)
+  specialInstructions String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  items               OrderItem[]
+  delivery            Delivery?
+  customer            Customer?   @relation(fields: [customerId], references: [id])
+  customerId          String?
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  quantity   Int
+  unitPrice  Float
+  order      Order    @relation(fields: [orderId], references: [id])
+  orderId    String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+}
+
+model Customer {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  totalOrders   Int      @default(0)
+  totalSpend    Float    @default(0)
+  loyaltyPoints Int      @default(0)
+  createdAt     DateTime @default(now())
+  orders        Order[]
+}
+
+model Delivery {
+  id          String    @id @default(cuid())
+  order       Order     @relation(fields: [orderId], references: [id])
+  orderId     String    @unique
+  riderName   String?
+  status      String    @default("pending")
+  assignedAt  DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Reservation {
+  id           String   @id @default(cuid())
+  reference    String   @unique
+  customerName String
+  phone        String
+  date         DateTime
+  time         String
+  partySize    Int
+  tableNumber  Int?
+  status       String   @default("confirmed")
+  createdAt    DateTime @default(now())
+}
+
+model Inventory {
+  id           String   @id @default(cuid())
+  menuItem     MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId   String   @unique
+  currentStock Int
+  unit         String
+  lowThreshold Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model DiscountCode {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  type       String   // percentage, fixed
+  value      Float
+  expiryDate DateTime
+  usageLimit Int
+  usageCount Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model LoyaltyReward {
+  id             String   @id @default(cuid())
+  name           String
+  description    String
+  pointsRequired Int
+  discountValue  Float
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+}
