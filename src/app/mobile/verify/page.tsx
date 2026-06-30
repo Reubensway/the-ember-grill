@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { Suspense, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { showMobileToast } from '@/hooks/use-mobile-toast';
 
-export default function VerifyOTPPage() {
+function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || 'your email';
@@ -112,5 +112,13 @@ export default function VerifyOTPPage() {
         </button>
       </p>
     </div>
+  );
+}
+
+export default function VerifyOTPPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-full"><p className="text-sm text-gray-400">Loading...</p></div>}>
+      <VerifyContent />
+    </Suspense>
   );
 }
